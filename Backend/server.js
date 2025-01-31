@@ -10,6 +10,8 @@ const likeRoute = require('./routes/likeRoute.js');
 const commentRoute = require('./routes/commentRoute.js');
 const notificationRoute = require('./routes/notificationRoute.js');
 const searchRoute = require('./routes/searchRoute.js');
+const jobRoute = require('./routes/jobRoute.js');
+const applicationRoute = require('./routes/applicationRoute.js');
 
 
 dotenv.config();
@@ -31,6 +33,8 @@ app.use('/api/v1/like', likeRoute);
 app.use('/api/v1/comment', commentRoute);
 app.use('/api/v1/notification', notificationRoute);
 app.use('/api/v1/search', searchRoute);
+app.use('/api/v1/job', jobRoute);
+app.use('/api/v1/application',applicationRoute);
 
 app.get('/', (req, res) => {
     console.log("Hello World");
