@@ -11,3 +11,5 @@ router.route('/accept-request').put(authenticationMiddleware(), acceptConnection
 router.route('/reject-request/:id').put(authenticationMiddleware(), rejectConnectionRequest);
 
 router.route('/get-connections').get(authenticationMiddleware(), getAllAcceptedConnections);
+
+module.exports = router;

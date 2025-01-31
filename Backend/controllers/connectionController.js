@@ -1,4 +1,4 @@
-const { Connection, User } = require('../models');
+const { Connection } = require('../models/connection.js');
 
 
 

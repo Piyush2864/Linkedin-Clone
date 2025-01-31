@@ -4,6 +4,7 @@ const cors = require('cors');
 const { connectDB } = require('./db/config.js');
 const authRoute = require('./routes/authRoute.js');
 const profileRoute = require('./routes/profileRoute.js');
+const connectionRoute = require('./routes/connectionRoute.js');
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 // Routes
 app.use('/api/v1/auth', authRoute);
 app.use('/api/v1/profile', profileRoute);
+app.use('/api/v1/connection', connectionRoute);
 
 app.get('/', (req, res) => {
     console.log("Hello World");
