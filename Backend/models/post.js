@@ -1,6 +1,7 @@
 'use strict';
 
 const { Model, DataTypes } = require('sequelize');
+const {sequelize} = require('../db/config.js')
 
 class Post extends Model {
   static associate(models) {

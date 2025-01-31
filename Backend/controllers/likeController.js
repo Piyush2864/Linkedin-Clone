@@ -1,4 +1,4 @@
-const { Like, User } = require('../models');
+const { Like, User } = require('../models/post.js');
 
 
 
