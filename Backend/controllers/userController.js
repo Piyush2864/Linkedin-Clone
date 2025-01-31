@@ -1,8 +1,8 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import User from '../models/user.js'
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user.js');
 
-export const signupController = async (req, res) => {
+const signupController = async (req, res) => {
     try {
         const { name, email, password, profile_picture, headline, location } = req.body;
 
@@ -27,18 +27,19 @@ export const signupController = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'User created successfully', user
+            message: 'User created successfully',
+            user
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error
         });
     }
 };
 
-
-export const loginController = async (req, res) => {
+const loginController = async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -58,18 +59,26 @@ export const loginController = async (req, res) => {
             });
         }
 
-        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET_KEY, {
+        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET_KEY, {
             expiresIn: '1d',
         });
 
         res.status(200).json({
             success: true,
-            message: 'Login successful', token
+            message: 'Login successful',
+            token
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error
         });
     }
+};
+
+// Exporting controllers
+module.exports = {
+    signupController,
+    loginController
 };

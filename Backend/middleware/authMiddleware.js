@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
 
+const authenticationMiddleware = async (req, res, next) => {
+    const token = req.headers.authorization?.split(" ")[1];
 
-export const authenticationMiddleware = async (req, res, next) => {
-    const token = req.headers['authorization'];
     if (!token) {
         return res.status(401).json({
             success: false,
@@ -11,8 +11,8 @@ export const authenticationMiddleware = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET_KEY);
-        req.user = decoded; // Add user data to request object
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        req.user = decoded;
         next();
     } catch (error) {
         res.status(401).json({
@@ -20,4 +20,6 @@ export const authenticationMiddleware = async (req, res, next) => {
             message: 'Invalid token.'
         });
     }
-}
+};
+
+module.exports = authenticationMiddleware;
