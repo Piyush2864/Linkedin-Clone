@@ -9,6 +9,7 @@ const postRoute = require('./routes/postRoute.js');
 const likeRoute = require('./routes/likeRoute.js');
 const commentRoute = require('./routes/commentRoute.js');
 const notificationRoute = require('./routes/notificationRoute.js');
+const searchRoute = require('./routes/searchRoute.js');
 
 
 dotenv.config();
@@ -29,6 +30,7 @@ app.use('/api/v1/post', postRoute);
 app.use('/api/v1/like', likeRoute);
 app.use('/api/v1/comment', commentRoute);
 app.use('/api/v1/notification', notificationRoute);
+app.use('/api/v1/search', searchRoute);
 
 app.get('/', (req, res) => {
     console.log("Hello World");
