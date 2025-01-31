@@ -3,16 +3,28 @@ const { Message } = require('../models/message.js');
 
 
 
+
 const sendMessageController = async (req, res) => {
     try {
         const { receiver_id, content } = req.body;
         const sender_id = req.user.id;
 
-        const message = await Message.create({
-            sender_id,
-            receiver_id,
-            content,
+        const message = await Message.create({ sender_id, receiver_id, content });
+
+
+        const notification = await Notification.create({
+            user_id: receiver_id,
+            type: 'message',
+            message: `New message from User ${sender_id}`,
         });
+
+
+        // Emit message event to receiver
+        const receiverSocket = global.io.sockets.get(receiver_id);
+        if (receiverSocket) {
+            global.io.to(receiverSocket).emit('receive_message', message);
+            global.io.to(receiverSocket).emit('new_notification', notification);
+        }
 
         res.status(201).json({
             success: true,
