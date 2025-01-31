@@ -1,28 +1,36 @@
-const { User } = require('../models/user.js');
+const { Op } = require('sequelize');
+const { Notification } = require('../models/notification.js');
 const { Message } = require('../models/message.js');
 
-
-
+const onlineUsers = new Map(); 
 
 const sendMessageController = async (req, res) => {
     try {
         const { receiver_id, content } = req.body;
         const sender_id = req.user.id;
 
-        const message = await Message.create({ sender_id, receiver_id, content });
+        const isDelivered = onlineUsers.has(receiver_id);
 
+        
+        const message = await Message.create({ 
+            sender_id, 
+            receiver_id, 
+            content, 
+            is_delivered: isDelivered,
+        });
 
+        
         const notification = await Notification.create({
             user_id: receiver_id,
             type: 'message',
             message: `New message from User ${sender_id}`,
         });
 
-
-        // Emit message event to receiver
+        
         const receiverSocket = global.io.sockets.get(receiver_id);
         if (receiverSocket) {
             global.io.to(receiverSocket).emit('receive_message', message);
+            global.io.to(receiverSocket).emit('message_delivered', message.id);
             global.io.to(receiverSocket).emit('new_notification', notification);
         }
 
@@ -31,14 +39,16 @@ const sendMessageController = async (req, res) => {
             message: 'Message sent',
             data: message
         });
+
     } catch (error) {
+        console.error("Error in sendMessageController:", error);
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message,
         });
     }
-}
-
+};
 
 const getChatHistoryController = async (req, res) => {
     try {
@@ -57,16 +67,19 @@ const getChatHistoryController = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            messages: 'Fetch history between two users.',
+            message: 'Chat history fetched successfully',
             data: messages
         });
+
     } catch (error) {
+        console.error("Error in getChatHistoryController:", error);
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message,
         });
     }
-}
+};
 
 
 const markAsReadController = async (req, res) => {
@@ -74,7 +87,8 @@ const markAsReadController = async (req, res) => {
         const userId = req.params.userId;
         const currentUserId = req.user.id;
 
-        const message = await Message.update(
+        
+        await Message.update(
             { is_read: true },
             {
                 where: {
@@ -85,22 +99,82 @@ const markAsReadController = async (req, res) => {
             }
         );
 
+        
+        const senderSocket = onlineUsers.get(userId);
+        if (senderSocket) {
+            global.io.to(senderSocket).emit('message_seen', { sender_id: currentUserId });
+        }
+
         res.status(200).json({
             success: true,
-            message: 'Messages marked as read',
-            data: message
+            message: 'Messages marked as read'
         });
+
     } catch (error) {
+        console.error("Error in markAsReadController:", error);
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message,
         });
     }
-}
+};
 
+
+const startTypingController = (req, res) => {
+    try {
+        const { receiver_id } = req.body;
+        const sender_id = req.user.id;
+
+        const receiverSocket = onlineUsers.get(receiver_id);
+        if (receiverSocket) {
+            global.io.to(receiverSocket).emit('user_typing', { sender_id });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Typing event emitted'
+        });
+
+    } catch (error) {
+        console.error("Error in startTypingController:", error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message,
+        });
+    }
+};
+
+const stopTypingController = (req, res) => {
+    try {
+        const { receiver_id } = req.body;
+        const sender_id = req.user.id;
+
+        const receiverSocket = onlineUsers.get(receiver_id);
+        if (receiverSocket) {
+            global.io.to(receiverSocket).emit('user_stopped_typing', { sender_id });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Stopped typing event emitted'
+        });
+
+    } catch (error) {
+        console.error("Error in stopTypingController:", error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message,
+        });
+    }
+};
 
 module.exports = {
     sendMessageController,
     getChatHistoryController,
-    markAsReadController
-}
+    markAsReadController,
+    startTypingController,
+    stopTypingController
+};
