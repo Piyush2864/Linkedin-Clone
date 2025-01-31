@@ -2,7 +2,10 @@ module.exports = (sequelize, DataTypes) => {
     const Message = sequelize.define('Message', {
       sender_id: DataTypes.INTEGER,  
       receiver_id: DataTypes.INTEGER, 
-      content: DataTypes.TEXT,        
+      content: DataTypes.TEXT,
+      is_delivered: { 
+        type: DataTypes.BOOLEAN, 
+        defaultValue: false },        
       is_read: {                      
         type: DataTypes.BOOLEAN,
         defaultValue: false,
