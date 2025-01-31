@@ -1,4 +1,5 @@
-const { Comment, User } = require('../models/post.js');
+const { Comment, Post, User } = require('../models/post.js');
+const { createNotification } = require('../utils/notification.js');
 
 
 
@@ -19,6 +20,8 @@ const createCommentController = async (req, res) => {
         const post = await Post.findByPk(postId);
         post.comments_count += 1;
         await post.save();
+
+        createNotification(post.user_id, 'comment', `${req.user.name} commented on your post`);
 
         res.status(201).json({
             success: true,
