@@ -1,4 +1,5 @@
 const { Connection } = require('../models/connection.js');
+const { createNotification } = require('../utils/notification.js');
 
 
 
@@ -35,6 +36,8 @@ const sendConnectionRequest = async(req, res) => {
           connection_id,
           status: 'pending',
         });
+
+        createNotification(connection_id, 'connection_request', `${req.user.name} sent you a connection request`);
     
         res.status(201).json({ 
             success: true,
