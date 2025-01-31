@@ -1,4 +1,5 @@
-const { Like, User } = require('../models/post.js');
+const { Like, Post, User } = require('../models/post.js');
+const { createNotification } = require('../utils/notification.js');
 
 
 
@@ -26,6 +27,8 @@ const createLikeController = async (req, res) => {
         const post = await Post.findByPk(postId);
         post.likes_count += 1;
         await post.save();
+
+        createNotification(post.user_id, 'like', `${req.user.name} liked your post`);
 
         res.status(200).json({
             success: true,
