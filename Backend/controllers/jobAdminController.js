@@ -132,27 +132,29 @@ const deleteJobPostController = async (req, res) => {
 
 const searchJobController = async (req, res) => {
     try {
-        const { query } = req.query;
+        const { query, status, sortBy, order, page = 1, limit = 10 } = req.query;
+        const offset = (page - 1) * limit;
 
-        if (!query) {
-            return res.status(400).json({
-                success: false,
-                message: 'Search query is required'
-            });
+        let whereCondition = {};
+        if (query) {
+            whereCondition[Op.or] = [
+                { title: { [Op.like]: `%${query}%` } },
+                { company: { [Op.like]: `%${query}%` } },
+            ];
         }
+        if (status) whereCondition.status = status;
 
-        const jobs = await Job.findAll({
-            where: {
-                [Op.or]: [
-                    { title: { [Op.like]: `%${query}%` } },
-                    { company: { [Op.like]: `%${query}%` } },
-                ],
-            },
+        const jobs = await Job.findAndCountAll({
+            where: whereCondition,
+            order: [[sortBy || 'createdAt', order || 'DESC']],
+            limit: parseInt(limit),
+            offset: parseInt(offset),
         });
 
         res.status(200).json({
             success: true,
-            data: jobs
+            total: jobs.count,
+            jobs: jobs.rows
         });
     } catch (error) {
         res.status(500).json({

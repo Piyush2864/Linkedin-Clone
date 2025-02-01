@@ -56,27 +56,29 @@ const deleteUsersController = async (req, res) => {
 
 const searchUsersController = async (req, res) => {
     try {
-        const { query } = req.query;
+        const { query, role, sortBy, order, page = 1, limit = 10 } = req.query;
+        const offset = (page - 1) * limit;
 
-        if (!query) {
-            return res.status(400).json({
-                success: false,
-                message: 'Search query is required'
-            });
+        let whereCondition = {};
+        if (query) {
+            whereCondition[Op.or] = [
+                { name: { [Op.like]: `%${query}%` } },
+                { email: { [Op.like]: `%${query}%` } },
+            ];
         }
+        if (role) whereCondition.role = role;
 
-        const users = await User.findAll({
-            where: {
-                [Op.or]: [
-                    { name: { [Op.like]: `%${query}%` } },
-                    { email: { [Op.like]: `%${query}%` } },
-                ],
-            },
+        const users = await User.findAndCountAll({
+            where: whereCondition,
+            order: [[sortBy || 'createdAt', order || 'DESC']],
+            limit: parseInt(limit),
+            offset: parseInt(offset),
         });
 
         res.status(200).json({
             success: true,
-            data: users
+            total: users.count,
+            users: users.rows
         });
     } catch (error) {
         res.status(500).json({
