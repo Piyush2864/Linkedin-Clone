@@ -57,4 +57,4 @@ const deleteUsersController = async (req, res) => {
 module.exports = {
     getAllUsersController,
     deleteUsersController,
-}
+}  

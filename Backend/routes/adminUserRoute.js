@@ -9,4 +9,4 @@ router.route('/get-all-user').get(authenticationMiddleware(), getAllUsersControl
 
 router.route('/delete-user/:userId').delete(authenticationMiddleware(), deleteUsersController);
 
-module.exports = router;
+module.exports = router; 
