@@ -24,6 +24,9 @@ const groupMessageRoute = require('./routes/groupMessageRoute.js');
 const endoresmentRoute = require('./routes/endoresmentRoute.js');
 const profileViewRoute = require('./routes/profileViewRoute.js');
 const reactionRoute = require('./routes/reactionRoute.js');
+const adminUserRoute = require('./routes/adminUserRoute.js');
+const adminJobRoute = require('./routes/adminJobRoute.js');
+const adminPostRoute = require('./routes/adminPostRoute.js');
 
 dotenv.config();
 
@@ -66,6 +69,9 @@ app.use('/api/v1/reaction', reactionRoute);
 app.use('/api/v1/message', messageRoute);
 app.use('/api/v1/group', groupRoute);
 app.use('/api/v1/groupMessage', groupMessageRoute);
+app.use('/admin/users', adminUserRoute); 
+app.use('/admin/posts', adminPostRoute);
+app.use('/admin/jobs', adminJobRoute);
 
 app.get('/', (req, res) => {
     console.log("Hello World");
