@@ -1,4 +1,5 @@
 const { User } = require('../models/user.js');
+const { Op } = require('sequelize');
 
 
 
@@ -56,21 +57,28 @@ const deleteUsersController = async (req, res) => {
 
 const searchUsersController = async (req, res) => {
     try {
-        const { query, role, sortBy, order, page = 1, limit = 10 } = req.query;
+        const { query, role, location, skills, experience, sortBy, order, page = 1, limit = 10 } = req.query;
         const offset = (page - 1) * limit;
 
         let whereCondition = {};
+        
+        
         if (query) {
             whereCondition[Op.or] = [
                 { name: { [Op.like]: `%${query}%` } },
                 { email: { [Op.like]: `%${query}%` } },
             ];
         }
-        if (role) whereCondition.role = role;
 
+        if (role) whereCondition.role = role;
+        if (location) whereCondition.location = { [Op.like]: `%${location}%` };
+        if (skills) whereCondition.skills = { [Op.like]: `%${skills}%` };
+        if (experience) whereCondition.experience = { [Op.gte]: experience };
+
+        
         const users = await User.findAndCountAll({
             where: whereCondition,
-            order: [[sortBy || 'createdAt', order || 'DESC']],
+            order: [[sortBy || 'createdAt', order || 'DESC']], 
             limit: parseInt(limit),
             offset: parseInt(offset),
         });
@@ -83,10 +91,11 @@ const searchUsersController = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error
         });
     }
-}
+};
 
 
 module.exports = {

@@ -1,4 +1,5 @@
 const { Job } = require('../models/job.js');
+const { Op } = require('sequelize');
 
 
 
@@ -132,21 +133,29 @@ const deleteJobPostController = async (req, res) => {
 
 const searchJobController = async (req, res) => {
     try {
-        const { query, status, sortBy, order, page = 1, limit = 10 } = req.query;
+        const { query, location, minSalary, maxSalary, experience, status, sortBy, order, page = 1, limit = 10 } = req.query;
         const offset = (page - 1) * limit;
 
         let whereCondition = {};
+        
+        
         if (query) {
             whereCondition[Op.or] = [
                 { title: { [Op.like]: `%${query}%` } },
-                { company: { [Op.like]: `%${query}%` } },
+                { company_name: { [Op.like]: `%${query}%` } }, 
             ];
         }
-        if (status) whereCondition.status = status;
 
+        if (location) whereCondition.location = { [Op.like]: `%${location}%` };
+        if (minSalary) whereCondition.salary = { [Op.gte]: minSalary };
+        if (maxSalary) whereCondition.salary = { ...whereCondition.salary, [Op.lte]: maxSalary };
+        if (experience) whereCondition.experience = { [Op.gte]: experience };
+        if (status) whereCondition.status = status; 
+
+        
         const jobs = await Job.findAndCountAll({
             where: whereCondition,
-            order: [[sortBy || 'createdAt', order || 'DESC']],
+            order: [[sortBy || 'createdAt', order || 'DESC']], 
             limit: parseInt(limit),
             offset: parseInt(offset),
         });
@@ -159,10 +168,11 @@ const searchJobController = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error
         });
     }
-}
+};
 
 
 module.exports = {

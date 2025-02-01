@@ -1,4 +1,5 @@
 const { ProfileView } = require('../models/profileView.js');
+const { User } = require('../models/user.js');
 
 
 
@@ -41,6 +42,15 @@ const getAllProfileViewController = async (req, res) => {
     try {
         const userId = req.user.id;
 
+
+        const user = await User.findByPk(userId);
+        if (user.subscription_type !== 'premium') {
+            return res.status(403).json({
+                success: false,
+                message: 'Upgrade to Premium to access this feature',
+            });
+        }
+
         const profileViews = await ProfileView.findAll({
             where: { viewed_user_id: userId },
             include: [{ model: User, as: 'viewer', attributes: ['id', 'name'] }],
@@ -55,10 +65,12 @@ const getAllProfileViewController = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error
         });
     }
-}
+};
+
 
 
 const profileViewAnalyticsController = async (req, res) => {
