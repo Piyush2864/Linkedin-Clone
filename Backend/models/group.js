@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const Group = sequelize.define('Group', {
-      name: DataTypes.STRING, // Group Name
-      creator_id: DataTypes.INTEGER, // User who created the group
+      name: DataTypes.STRING, 
+      creator_id: DataTypes.INTEGER, 
     });
   
     Group.associate = (models) => {
@@ -11,4 +11,3 @@ module.exports = (sequelize, DataTypes) => {
   
     return Group;
   };
-  
