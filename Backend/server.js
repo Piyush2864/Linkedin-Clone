@@ -29,6 +29,7 @@ const adminJobRoute = require('./routes/adminJobRoute.js');
 const adminPostRoute = require('./routes/adminPostRoute.js');
 const admindashboardRoute = require('./routes/admindashboardRoute.js');
 const subscriptionRoute = require('./routes/subscriptionRoute.js');
+const adminReportRoute = require('./routes/adminReportRoute.js');
 
 dotenv.config();
 
@@ -75,6 +76,7 @@ app.use('/admin/admin-users', adminUserRoute);
 app.use('/admin/admin-posts', adminPostRoute);
 app.use('/admin/admin-jobs', adminJobRoute);
 app.use('/admin/admin-dashboard', admindashboardRoute);
+app.use('/api/v1/admin-report', adminReportRoute);
 app.use('/admin/subscription', subscriptionRoute);
  
 app.get('/', (req, res) => {
