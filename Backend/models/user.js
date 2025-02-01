@@ -1,7 +1,7 @@
 'use strict';
 
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../db/config.js'); // Import sequelize instance
+const sequelize = require('../db/config.js'); 
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
@@ -32,9 +32,13 @@ module.exports = (sequelize, DataTypes) => {
       profile_picture: DataTypes.STRING,
       headline: DataTypes.STRING,
       location: DataTypes.STRING,
+      subscription_type: {
+        type: DataTypes.ENUM('free', 'premium'),
+        defaultValue: 'free',
+      },
     },
     {
-      sequelize, // Pass the sequelize instance correctly
+      sequelize, 
       modelName: 'User',
     }
   );
