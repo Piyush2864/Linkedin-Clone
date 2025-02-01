@@ -32,6 +32,7 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 // Initialize Socket.IO and export it globally
 const io = new Server(server, {

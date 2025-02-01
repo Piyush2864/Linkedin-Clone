@@ -4,12 +4,13 @@ const { Post, Like, Comment, User } = require('../models/post.js');
 
 const createPostController = async (req, res) => {
     try {
-        const { content, media_url } = req.body;
-        const userId = req.user.id;  // From JWT token
+        const { content} = req.body;
+        const userId = req.user.id;
+        const  mediaurl  = req.file ? `/uploads/${req.file.filename}` : null; 
 
         const post = await Post.create({
             content,
-            media_url,
+            media_url: mediaurl,
             user_id: userId,
         });
 
