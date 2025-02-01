@@ -61,7 +61,50 @@ const getAllProfileViewController = async (req, res) => {
 }
 
 
+const profileViewAnalyticsController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+
+        const weeklyViews = await ProfileView.count({
+            where: {
+                viewed_user_id: userId,
+                createdAt: { [Op.gte]: sevenDaysAgo },
+            },
+        });
+
+
+        const monthlyViews = await ProfileView.count({
+            where: {
+                viewed_user_id: userId,
+                createdAt: { [Op.gte]: thirtyDaysAgo },
+            },
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Fetch view profile analytic data.',
+            weeklyViews,
+            monthlyViews,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error', error
+        });
+    }
+}
+
+
 module.exports = {
     trackProfileViewController,
     getAllProfileViewController,
+    profileViewAnalyticsController,
 }
