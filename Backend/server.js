@@ -21,6 +21,7 @@ const applicationRoute = require('./routes/applicationRoute.js');
 const messageRoute = require('./routes/messageRoute.js');
 const groupRoute = require('./routes/groupRoute.js');
 const groupMessageRoute = require('./routes/groupMessageRoute.js');
+const endoresmentRoute = require('./routes/endoresmentRoute.js');
 
 dotenv.config();
 
@@ -56,6 +57,7 @@ app.use('/api/v1/search', searchRoute);
 app.use('/api/v1/job', jobRoute);
 app.use('/api/v1/jobRecommendation', jobRecommendationRoute);
 app.use('/api/v1/savedJob', savedJobRoute);
+app.use('/api/v1/endoresment', endoresmentRoute);
 app.use('/api/v1/application', applicationRoute);
 app.use('/api/v1/message', messageRoute);
 app.use('/api/v1/group', groupRoute);
