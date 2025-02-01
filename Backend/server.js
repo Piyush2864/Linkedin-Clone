@@ -28,6 +28,7 @@ const adminUserRoute = require('./routes/adminUserRoute.js');
 const adminJobRoute = require('./routes/adminJobRoute.js');
 const adminPostRoute = require('./routes/adminPostRoute.js');
 const admindashboardRoute = require('./routes/admindashboardRoute.js');
+const subscriptionRoute = require('./routes/subscriptionRoute.js');
 
 dotenv.config();
 
@@ -73,7 +74,8 @@ app.use('/api/v1/groupMessage', groupMessageRoute);
 app.use('/admin/admin-users', adminUserRoute); 
 app.use('/admin/admin-posts', adminPostRoute);
 app.use('/admin/admin-jobs', adminJobRoute);
-app.use('/admin/admin-dashboard', adminJobRoute);
+app.use('/admin/admin-dashboard', admindashboardRoute);
+app.use('/admin/subscription', subscriptionRoute);
  
 app.get('/', (req, res) => {
     console.log("Hello World");
