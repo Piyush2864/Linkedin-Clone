@@ -53,7 +53,41 @@ const deletePostsController = async (req, res) => {
 }
 
 
+const searchPostsController = async (req, res) => {
+    try {
+        const { query } = req.query;
+
+        if (!query) {
+            return res.status(400).json({
+                success: false,
+                message: 'Search query is required'
+            });
+        }
+
+        const posts = await Post.findAll({
+            where: {
+                [Op.or]: [
+                    { content: { [Op.like]: `%${query}%` } },
+                ],
+            },
+            include: [{ model: User, attributes: ['id', 'name'] }],
+        });
+
+        res.status(200).json({
+            success: true,
+            data: posts
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error', error
+        });
+    }
+}
+
+
 module.exports = {
     getAllPostsController,
     deletePostsController,
+    searchPostsController,
 }      

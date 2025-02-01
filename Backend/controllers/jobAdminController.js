@@ -130,9 +130,43 @@ const deleteJobPostController = async (req, res) => {
 }
 
 
+const searchJobController = async (req, res) => {
+    try {
+        const { query } = req.query;
+
+        if (!query) {
+            return res.status(400).json({
+                success: false,
+                message: 'Search query is required'
+            });
+        }
+
+        const jobs = await Job.findAll({
+            where: {
+                [Op.or]: [
+                    { title: { [Op.like]: `%${query}%` } },
+                    { company: { [Op.like]: `%${query}%` } },
+                ],
+            },
+        });
+
+        res.status(200).json({
+            success: true,
+            data: jobs
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error', error
+        });
+    }
+}
+
+
 module.exports = {
     getAllJobsController,
     approveJobPostController,
     rejectJobPostController,
     deleteJobPostController,
+    searchJobController,
 }   

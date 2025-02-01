@@ -54,7 +54,41 @@ const deleteUsersController = async (req, res) => {
 }
 
 
+const searchUsersController = async (req, res) => {
+    try {
+        const { query } = req.query;
+
+        if (!query) {
+            return res.status(400).json({
+                success: false,
+                message: 'Search query is required'
+            });
+        }
+
+        const users = await User.findAll({
+            where: {
+                [Op.or]: [
+                    { name: { [Op.like]: `%${query}%` } },
+                    { email: { [Op.like]: `%${query}%` } },
+                ],
+            },
+        });
+
+        res.status(200).json({
+            success: true,
+            data: users
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error', error
+        });
+    }
+}
+
+
 module.exports = {
     getAllUsersController,
     deleteUsersController,
+    searchUsersController,
 }  
