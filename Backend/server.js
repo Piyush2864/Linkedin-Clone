@@ -27,6 +27,7 @@ const reactionRoute = require('./routes/reactionRoute.js');
 const adminUserRoute = require('./routes/adminUserRoute.js');
 const adminJobRoute = require('./routes/adminJobRoute.js');
 const adminPostRoute = require('./routes/adminPostRoute.js');
+const admindashboardRoute = require('./routes/admindashboardRoute.js');
 
 dotenv.config();
 
@@ -69,9 +70,10 @@ app.use('/api/v1/reaction', reactionRoute);
 app.use('/api/v1/message', messageRoute);
 app.use('/api/v1/group', groupRoute);
 app.use('/api/v1/groupMessage', groupMessageRoute);
-app.use('/admin/users', adminUserRoute); 
-app.use('/admin/posts', adminPostRoute);
-app.use('/admin/jobs', adminJobRoute);
+app.use('/admin/admin-users', adminUserRoute); 
+app.use('/admin/admin-posts', adminPostRoute);
+app.use('/admin/admin-jobs', adminJobRoute);
+app.use('/admin/admin-dashboard', adminJobRoute);
  
 app.get('/', (req, res) => {
     console.log("Hello World");
