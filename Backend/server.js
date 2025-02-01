@@ -22,6 +22,7 @@ const messageRoute = require('./routes/messageRoute.js');
 const groupRoute = require('./routes/groupRoute.js');
 const groupMessageRoute = require('./routes/groupMessageRoute.js');
 const endoresmentRoute = require('./routes/endoresmentRoute.js');
+const profileViewRoute = require('./routes/profileViewRoute.js');
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use('/api/v1/job', jobRoute);
 app.use('/api/v1/jobRecommendation', jobRecommendationRoute);
 app.use('/api/v1/savedJob', savedJobRoute);
 app.use('/api/v1/endoresment', endoresmentRoute);
+app.use('/api/v1/profileView', profileViewRoute);
 app.use('/api/v1/application', applicationRoute);
 app.use('/api/v1/message', messageRoute);
 app.use('/api/v1/group', groupRoute);
@@ -87,4 +89,3 @@ server.listen(process.env.PORT, () => {
 });
 
 module.exports = { app, io }; // Export io for usage in controllers
-
