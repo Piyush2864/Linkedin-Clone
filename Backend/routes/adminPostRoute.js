@@ -9,4 +9,4 @@ router.route('/get-all-post').get(authenticationMiddleware(), getAllPostsControl
 
 router.route('/delete-post/:postId').delete(authenticationMiddleware(), deletePostsController);
 
-module.exports = router;
+module.exports = router; 
