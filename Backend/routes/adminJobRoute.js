@@ -13,4 +13,4 @@ router.route('/reject/:jobId').put(authenticationMiddleware(), rejectJobPostCont
 
 router.route('/delete-job-post/:jobId').delete(authenticationMiddleware(), deleteJobPostController);
 
-module.exports = router;
+module.exports = router; 

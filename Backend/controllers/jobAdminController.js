@@ -135,4 +135,4 @@ module.exports = {
     approveJobPostController,
     rejectJobPostController,
     deleteJobPostController,
-}
+}   
