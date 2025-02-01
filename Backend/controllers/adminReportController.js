@@ -1,4 +1,4 @@
-const { User } = require('../../models/user.js');
+const { User } = require('../models/user.js');
 const { Job } = require('../models/job.js');
 const { Post } = require('../models/post.js');
 const { Parser } = require('json2csv');
