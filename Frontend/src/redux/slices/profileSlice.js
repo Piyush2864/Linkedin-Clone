@@ -18,7 +18,7 @@ export const addEndorsement = createAsyncThunk(
   }
 );
 
-// Remove endorsement
+
 export const removeEndorsement = createAsyncThunk(
   'profile/removeEndorsement',
   async ({ userId, skill }, { rejectWithValue }) => {
@@ -28,6 +28,21 @@ export const removeEndorsement = createAsyncThunk(
         { data: { userId, skill }, headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const searchSkills = createAsyncThunk(
+  'profile/searchSkills',
+  async (searchTerm, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`/profile/skills/search`, {
+        params: { searchTerm },
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      return response.data.skills;
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -48,6 +63,17 @@ const profileSlice = createSlice({
         state.endorsements = state.endorsements.filter(
           (endorsement) => endorsement.skill !== action.payload.skill
         );
+      })
+      .addCase(searchSkills.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(searchSkills.fulfilled, (state, action) => {
+        state.loading = false;
+        state.searchResults = action.payload;
+      })
+      .addCase(searchSkills.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
