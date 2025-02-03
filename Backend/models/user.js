@@ -32,6 +32,10 @@ module.exports = (sequelize, DataTypes) => {
       profile_picture: DataTypes.STRING,
       headline: DataTypes.STRING,
       location: DataTypes.STRING,
+      coverPhoto: {
+        type: DataTypes.STRING, // Store image URL
+        allowNull: true,
+      },
       subscription_type: {
         type: DataTypes.ENUM('free', 'premium'),
         defaultValue: 'free',
