@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
 import AppliedJobs from './pages/AppliedJobs';
+import SavedJobs from './pages/SavedJobs';
 
 const AppRoutes = () => {
   return (
@@ -13,6 +14,7 @@ const AppRoutes = () => {
         <Route path="/signup" element={<Signup />} />
 
         <Route path="/applied-jobs" element={<AppliedJobs />} />
+        <Route path="/saved-jobs" element={<SavedJobs />} />
       </Routes>
     </Router>
   );
