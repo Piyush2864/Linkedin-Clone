@@ -18,6 +18,17 @@ export const applyForJob = createAsyncThunk('jobs/applyForJob', async (jobId, { 
   }
 });
 
+export const saveJob = createAsyncThunk('jobs/saveJob', async (jobId, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`/jobs/${jobId}/save`, {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    return { jobId, saved: response.data.saved };
+  } catch (error) {
+    return rejectWithValue(error.response.data);
+  }
+});
+
 const jobSlice = createSlice({
   name: 'jobs',
   initialState: { jobs: [], loading: false, error: null },
@@ -37,6 +48,10 @@ const jobSlice = createSlice({
       .addCase(applyForJob.fulfilled, (state, action) => {
         const job = state.jobs.find((j) => j.id === action.payload.jobId);
         if (job) job.applied = true;
+      })
+      .addCase(saveJob.fulfilled, (state, action) => {
+        const job = state.jobs.find((j) => j.id === action.payload.jobId);
+        if (job) job.saved = action.payload.saved;
       });
   },
 });
