@@ -40,9 +40,18 @@ export const fetchRecommendedJobs = createAsyncThunk('jobs/fetchRecommendedJobs'
   }
 });
 
+export const fetchFilteredJobs = createAsyncThunk('jobs/fetchFilteredJobs', async (filters, { rejectWithValue }) => {
+  try {
+    const response = await axios.get('/jobs', { params: filters });
+    return response.data.jobs;
+  } catch (error) {
+    return rejectWithValue(error.response.data);
+  }
+});
+
 const jobSlice = createSlice({
   name: 'jobs',
-  initialState: { jobs: [], loading: false, error: null },
+  initialState: { jobs: [], filteredJobs: [], loading: false, error: null },
   extraReducers: (builder) => {
     builder
       .addCase(fetchJobs.pending, (state) => {
@@ -66,6 +75,17 @@ const jobSlice = createSlice({
       })
       .addCase(fetchRecommendedJobs.fulfilled, (state, action) => {
         state.recommendedJobs = action.payload;
+      })
+      .addCase(fetchFilteredJobs.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchFilteredJobs.fulfilled, (state, action) => {
+        state.loading = false;
+        state.filteredJobs = action.payload;
+      })
+      .addCase(fetchFilteredJobs.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
