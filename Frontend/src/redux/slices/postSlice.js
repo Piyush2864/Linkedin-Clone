@@ -44,6 +44,17 @@ export const addComment = createAsyncThunk('posts/addComment', async ({ postId, 
 });
 
 
+export const sharePost = createAsyncThunk('posts/sharePost', async (postId, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`/posts/${postId}/share`, {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    return response.data.post;
+  } catch (error) {
+    return rejectWithValue(error.response.data);
+  }
+});
+
 
 const postSlice = createSlice({
   name: 'posts',
@@ -71,6 +82,9 @@ const postSlice = createSlice({
       .addCase(addComment.fulfilled, (state, action) => {
         const post = state.posts.find((p) => p.id === action.payload.postId);
         if (post) post.comments.push(action.payload.comment);
+      })
+      .addCase(sharePost.fulfilled, (state, action) => {
+        state.posts.unshift(action.payload); // Add shared post to top of feed
       });
   },
 });
