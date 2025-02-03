@@ -49,9 +49,20 @@ export const searchSkills = createAsyncThunk(
   }
 );
 
+export const fetchProfileAnalytics = createAsyncThunk('profile/fetchProfileAnalytics', async (_, { rejectWithValue }) => {
+  try {
+    const response = await axios.get('/profile/analytics', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(error.response.data);
+  }
+});
+
 const profileSlice = createSlice({
   name: 'profile',
-  initialState: { profile: null, endorsements: [], loading: false, error: null },
+  initialState: { profile: null, analytics: {}, endorsements: [], loading: false, error: null },
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -74,6 +85,9 @@ const profileSlice = createSlice({
       .addCase(searchSkills.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(fetchProfileAnalytics.fulfilled, (state, action) => {
+        state.analytics = action.payload;
       });
   },
 });
