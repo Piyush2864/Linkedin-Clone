@@ -1,7 +1,32 @@
 module.exports = (sequelize, DataTypes) => {
     const ProfileView = sequelize.define('ProfileView', {
-        viewer_id: DataTypes.INTEGER,  // User who viewed the profile
-        viewed_user_id: DataTypes.INTEGER,  // Profile owner
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true,
+        },
+        viewer_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true, 
+            references: {
+                model: 'Users', 
+                key: 'id',
+            },
+            onDelete: 'SET NULL',
+        },
+        viewed_user_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'Users',
+                key: 'id',
+            },
+            onDelete: 'CASCADE',
+        },
+        viewed_at: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW,
+        },
     });
 
     ProfileView.associate = (models) => {
