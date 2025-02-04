@@ -1,7 +1,9 @@
 const { ProfileView } = require('../models/profileView.js');
+const Notification = require('../models/notification.js');
 const { User } = require('../models/user.js');
 
 
+const onlineUsers = new Map(); 
 
 const trackProfileViewController = async (req, res) => {
     try {
@@ -11,31 +13,44 @@ const trackProfileViewController = async (req, res) => {
         if (viewerId === parseInt(viewedUserId)) {
             return res.status(400).json({
                 success: false,
-                message: 'You cannot view your own profile'
+                message: "You can't view your own profile"
             });
         }
 
-
+        
         await ProfileView.create({ viewer_id: viewerId, viewed_user_id: viewedUserId });
 
-
-        await Notification.create({
+        
+        const notification = await Notification.create({
             user_id: viewedUserId,
+            sender_id: viewerId,
             type: 'profile_view',
-            message: `User ${viewerId} viewed your profile.`,
+            message: `${req.user.name} viewed your profile.`,
         });
+
+        
+        const receiverSocket = activeUsers.get(viewedUserId);
+        if (receiverSocket) {
+            io.to(receiverSocket).emit('newNotification', {
+                type: 'profile_view',
+                message: `${req.user.name} viewed your profile.`,
+            });
+        }
 
         res.status(201).json({
             success: true,
-            message: 'Profile view recorded'
+            message: 'Profile view recorded and notification sent'
         });
+
     } catch (error) {
+        console.error("Error in trackProfileViewController:", error);
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message,
         });
     }
-}
+};
 
 
 const getAllProfileViewController = async (req, res) => {

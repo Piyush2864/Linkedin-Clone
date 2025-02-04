@@ -4,12 +4,15 @@ const { Message } = require('../models/message.js');
 
 const onlineUsers = new Map(); 
 
+// const activeUsers = new Map(); // Map to track online users
+
 const sendMessageController = async (req, res) => {
     try {
         const { receiver_id, content } = req.body;
         const sender_id = req.user.id;
 
-        const isDelivered = onlineUsers.has(receiver_id);
+        
+        const isDelivered = activeUsers.has(receiver_id);
 
         
         const message = await Message.create({ 
@@ -19,24 +22,28 @@ const sendMessageController = async (req, res) => {
             is_delivered: isDelivered,
         });
 
-        
+       
         const notification = await Notification.create({
             user_id: receiver_id,
+            sender_id: sender_id,
             type: 'message',
             message: `New message from User ${sender_id}`,
         });
 
         
-        const receiverSocket = global.io.sockets.get(receiver_id);
+        const receiverSocket = activeUsers.get(receiver_id);
         if (receiverSocket) {
-            global.io.to(receiverSocket).emit('receive_message', message);
-            global.io.to(receiverSocket).emit('message_delivered', message.id);
-            global.io.to(receiverSocket).emit('new_notification', notification);
+            io.to(receiverSocket).emit('receive_message', message);
+            io.to(receiverSocket).emit('message_delivered', message.id);
+            io.to(receiverSocket).emit('new_notification', {
+                type: 'message',
+                message: `New message from User ${sender_id}`,
+            });
         }
 
         res.status(201).json({
             success: true,
-            message: 'Message sent',
+            message: 'Message sent successfully',
             data: message
         });
 
@@ -49,6 +56,7 @@ const sendMessageController = async (req, res) => {
         });
     }
 };
+
 
 const getChatHistoryController = async (req, res) => {
     try {
