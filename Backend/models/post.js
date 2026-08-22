@@ -33,6 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     Post.belongsTo(models.Post, { foreignKey: 'shared_post_id', as: 'sharedPost' });
     Post.hasMany(models.Like, { foreignKey: 'post_id', as: 'likesList' });
     Post.hasMany(models.Comment, { foreignKey: 'post_id', as: 'commentsList' });
+    Post.hasMany(models.SavedPost, { foreignKey: 'post_id', as: 'savedList' });
   };
 
   return Post;

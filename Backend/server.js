@@ -24,6 +24,7 @@ const groupMessageRoute = require('./routes/groupMessageRoute.js');
 const endoresmentRoute = require('./routes/endoresmentRoute.js');
 const profileViewRoute = require('./routes/profileViewRoute.js');
 const reactionRoute = require('./routes/reactionRoute.js');
+const companyRoute = require('./routes/companyRoute.js');
 const adminUserRoute = require('./routes/adminUserRoute.js');
 const adminJobRoute = require('./routes/adminJobRoute.js');
 const adminPostRoute = require('./routes/adminPostRoute.js');
@@ -72,6 +73,7 @@ app.use('/api/v1/reaction', reactionRoute);
 app.use('/api/v1/message', messageRoute);
 app.use('/api/v1/group', groupRoute);
 app.use('/api/v1/groupMessage', groupMessageRoute);
+app.use('/api/v1/company', companyRoute);
 app.use('/admin/admin-users', adminUserRoute); 
 app.use('/admin/admin-posts', adminPostRoute);
 app.use('/admin/admin-jobs', adminJobRoute);
@@ -80,7 +82,6 @@ app.use('/api/v1/admin-report', adminReportRoute);
 app.use('/admin/subscription', subscriptionRoute);
  
 app.get('/', (req, res) => {
-    console.log("Hello World");
     res.send("Server is running...");
 });
 
@@ -98,8 +99,9 @@ io.on('connection', (socket) => {
 });
 
 // Start Server
-server.listen(process.env.PORT, () => {
-    console.log(`Application running on port ${process.env.PORT}`);
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+    console.log(`Application running on port ${PORT}`);
 });
 
-module.exports = { app, io }; // Export io for usage in controllers
+module.exports = { app, io };

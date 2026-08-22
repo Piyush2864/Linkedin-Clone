@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { Op } = require('sequelize');
 const { User } = require('../models');
 
 const signupController = async (req, res) => {
@@ -94,7 +96,89 @@ const loginController = async (req, res) => {
     }
 };
 
+const forgotPasswordController = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'No user found with this email address'
+            });
+        }
+
+        // Generate 32-byte hex reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpires = new Date(Date.now() + 3600000); // 1 hour validity
+
+        user.reset_password_token = resetToken;
+        user.reset_password_expires = tokenExpires;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Password reset token generated successfully.',
+            resetToken, // In production, this can also be dispatched via email
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+};
+
+const resetPasswordController = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token and new password are required'
+            });
+        }
+
+        const user = await User.findOne({
+            where: {
+                reset_password_token: token,
+                reset_password_expires: {
+                    [Op.gt]: new Date(),
+                },
+            },
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired password reset token'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        user.reset_password_token = null;
+        user.reset_password_expires = null;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Password has been reset successfully. You can now log in.'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     signupController,
-    loginController
+    loginController,
+    forgotPasswordController,
+    resetPasswordController,
 };

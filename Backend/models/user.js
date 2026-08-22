@@ -9,9 +9,16 @@ module.exports = (sequelize, DataTypes) => {
       User.hasMany(models.Post, { foreignKey: 'user_id', as: 'posts' });
       User.hasMany(models.Like, { foreignKey: 'user_id', as: 'likes' });
       User.hasMany(models.Comment, { foreignKey: 'user_id', as: 'comments' });
+      User.hasMany(models.SavedPost, { foreignKey: 'user_id', as: 'savedPosts' });
       User.hasMany(models.Notification, { foreignKey: 'user_id', as: 'notifications' });
       User.hasMany(models.Job, { foreignKey: 'posted_by', as: 'jobsPosted' });
       User.hasMany(models.Application, { foreignKey: 'applicant_id', as: 'applications' });
+      User.hasMany(models.Company, { foreignKey: 'owner_id', as: 'ownedCompanies' });
+      User.belongsToMany(models.Company, {
+        through: 'CompanyFollowers',
+        as: 'followedCompanies',
+        foreignKey: 'user_id',
+      });
       User.belongsToMany(models.User, {
         as: 'connections',
         through: 'Connections',
@@ -53,6 +60,14 @@ module.exports = (sequelize, DataTypes) => {
       subscription_type: {
         type: DataTypes.ENUM('free', 'premium'),
         defaultValue: 'free',
+      },
+      reset_password_token: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      reset_password_expires: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
     },
     {
