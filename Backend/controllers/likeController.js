@@ -1,21 +1,33 @@
-const { Like, Post, User } = require('../models/post.js');
-const { createNotification } = require('../utils/notification.js');
-
-
+const { Like, Post, User } = require('../models');
+const { sendNotification } = require('../utils/notification.js');
 
 const createLikeController = async (req, res) => {
     try {
         const userId = req.user.id;
         const postId = req.params.postId;
 
+        const post = await Post.findByPk(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: 'Post not found',
+            });
+        }
+
         const existingLike = await Like.findOne({
             where: { post_id: postId, user_id: userId },
         });
 
         if (existingLike) {
-            return res.status(400).json({
-                success: false,
-                message: 'You already liked this post'
+            // Unlike post
+            await existingLike.destroy();
+            post.likes = Math.max(0, post.likes - 1);
+            await post.save();
+
+            return res.status(200).json({
+                success: true,
+                message: 'Post unliked successfully',
+                data: post,
             });
         }
 
@@ -24,25 +36,26 @@ const createLikeController = async (req, res) => {
             user_id: userId,
         });
 
-        const post = await Post.findByPk(postId);
-        post.likes_count += 1;
+        post.likes += 1;
         await post.save();
 
-        createNotification(post.user_id, 'like', `${req.user.name} liked your post`);
+        if (post.user_id !== userId) {
+            sendNotification(post.user_id, userId, 'like', `Someone liked your post`);
+        }
 
         res.status(200).json({
             success: true,
             message: 'Post liked successfully',
-            data: post
+            data: post,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message,
         });
     }
-}
-
+};
 
 const getAllLikesController = async (req, res) => {
     try {
@@ -51,32 +64,25 @@ const getAllLikesController = async (req, res) => {
         const likes = await Like.findAll({
             where: { post_id: postId },
             include: [
-                { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
+                { model: User, as: 'user', attributes: ['id', 'name', 'email', 'profile_picture'] },
             ],
         });
-
-        if (likes.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No likes found for this post'
-            });
-        }
 
         res.status(200).json({
             success: true,
             message: 'Fetch all likes successfully',
-            likes
+            likes,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message,
         });
     }
-}
-
+};
 
 module.exports = {
     createLikeController,
-    getAllLikesController
-}
+    getAllLikesController,
+};

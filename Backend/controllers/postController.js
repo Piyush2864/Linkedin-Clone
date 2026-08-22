@@ -1,6 +1,4 @@
-const { Post, Like, Comment, User } = require('../models/post.js');
-
-
+const { Post, Like, Comment, User } = require('../models');
 
 const createPostController = async (req, res) => {
     try {
@@ -16,47 +14,48 @@ const createPostController = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'Post created successfully', post
+            message: 'Post created successfully',
+            post
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message
         });
     }
-}
-
+};
 
 const getAllPostController = async (req, res) => {
     try {
         const posts = await Post.findAll({
             include: [
-                { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
-                { model: Like, attributes: ['user_id'] },
-                { model: Comment, attributes: ['content', 'user_id'] },
+                { model: User, as: 'user', attributes: ['id', 'name', 'email', 'profile_picture', 'headline'] },
+                { model: Like, as: 'likesList', attributes: ['user_id'] },
+                { model: Comment, as: 'commentsList', attributes: ['id', 'content', 'user_id'] },
             ],
+            order: [['createdAt', 'DESC']],
         });
 
         res.status(200).json({
             success: true,
-            message: 'Fetch all post successfully',
+            message: 'Fetch all posts successfully',
             posts
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message
         });
     }
-}
-
+};
 
 const postSharingController = async (req, res) => {
     try {
         const userId = req.user.id;
         const { content } = req.body;
         const sharedPostId = req.params.postId;
-
 
         const originalPost = await Post.findByPk(sharedPostId);
         if (!originalPost) {
@@ -66,7 +65,6 @@ const postSharingController = async (req, res) => {
             });
         }
 
-
         const newPost = await Post.create({
             content,
             user_id: userId,
@@ -74,46 +72,47 @@ const postSharingController = async (req, res) => {
         });
 
         res.status(201).json({
-            success: trur,
+            success: true,
             message: 'Post shared successfully',
             data: newPost
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message
         });
     }
-}
-
+};
 
 const getAllSharedPostController = async (req, res) => {
     try {
         const posts = await Post.findAll({
+            where: { shared_post_id: { [require('sequelize').Op.ne]: null } },
             include: [
-                { model: User, attributes: ['id', 'name'] },
-                { model: Post, as: 'sharedPost', include: [{ model: User, attributes: ['id', 'name'] }] },
+                { model: User, as: 'user', attributes: ['id', 'name', 'profile_picture'] },
+                { model: Post, as: 'sharedPost', include: [{ model: User, as: 'user', attributes: ['id', 'name'] }] },
             ],
             order: [['createdAt', 'DESC']],
         });
 
         res.status(200).json({
             success: true,
-            message: 'Fetch all shared post.',
+            message: 'Fetch all shared posts successfully',
             data: posts
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message
         });
     }
-}
-
+};
 
 module.exports = {
     createPostController,
     getAllPostController,
     postSharingController,
     getAllSharedPostController,
-}
+};

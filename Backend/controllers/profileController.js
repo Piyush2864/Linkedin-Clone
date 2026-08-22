@@ -1,24 +1,18 @@
-const { Profile } = require('../models/profile.js');
-const { Notification } = require('../models/notification.js');
-const { User } = require('../models/user.js');
-
-
+const { Profile, User, Notification, Endorsement } = require('../models');
+const { sendNotification } = require('../utils/notification.js');
 
 const createProfileController = async (req, res) => {
     try {
         const { bio, skills, experience, education } = req.body;
         const userId = req.user.id;
 
-
         const existingProfile = await Profile.findOne({ where: { user_id: userId } });
-
         if (existingProfile) {
             return res.status(400).json({
                 success: false,
                 message: 'Profile already exists'
             });
         }
-
 
         const profile = await Profile.create({
             bio,
@@ -37,18 +31,19 @@ const createProfileController = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Server error',
-            error,
+            error: error.message,
         });
     }
 };
-
 
 const getProfileController = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Find profile
-        const profile = await Profile.findOne({ where: { user_id: userId } });
+        const profile = await Profile.findOne({
+            where: { user_id: userId },
+            include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email', 'headline', 'location', 'profile_picture', 'coverPhoto'] }]
+        });
 
         if (!profile) {
             return res.status(404).json({
@@ -57,32 +52,29 @@ const getProfileController = async (req, res) => {
             });
         }
 
-        res.status(200).json(profile);
+        res.status(200).json({
+            success: true,
+            profile
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message
         });
     }
-}
-
+};
 
 const updateProfileController = async (req, res) => {
     try {
-        const { bio, skills, experience, education, headline } = req.body;
+        const { bio, skills, experience, education, headline, location } = req.body;
         const userId = req.user.id;
 
-        // Fetch profile details
         let profile = await Profile.findOne({ where: { user_id: userId } });
-
         if (!profile) {
-            return res.status(404).json({
-                success: false,
-                message: 'Profile not found',
-            });
+            profile = await Profile.create({ user_id: userId, bio: '', skills: [], experience: [], education: [] });
         }
 
-        // Fetch user details for profile & image updates
         const user = await User.findByPk(userId);
         if (!user) {
             return res.status(404).json({
@@ -91,24 +83,22 @@ const updateProfileController = async (req, res) => {
             });
         }
 
-        // Update profile data
         profile = await profile.update({
-            bio: bio || profile.bio,
-            skills: skills || profile.skills,
-            experience: experience || profile.experience,
-            education: education || profile.education,
+            bio: bio !== undefined ? bio : profile.bio,
+            skills: skills !== undefined ? skills : profile.skills,
+            experience: experience !== undefined ? experience : profile.experience,
+            education: education !== undefined ? education : profile.education,
         });
 
-        // Update user headline
         user.headline = headline || user.headline;
+        user.location = location || user.location;
 
-        // Handle profile and cover photo uploads
         if (req.files) {
             if (req.files.coverPhoto) {
                 user.coverPhoto = `/uploads/${req.files.coverPhoto[0].filename}`;
             }
             if (req.files.profilePicture) {
-                user.profilePicture = `/uploads/${req.files.profilePicture[0].filename}`;
+                user.profile_picture = `/uploads/${req.files.profilePicture[0].filename}`;
             }
         }
 
@@ -118,34 +108,36 @@ const updateProfileController = async (req, res) => {
             success: true,
             message: 'Profile updated successfully',
             profile,
-            user,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                headline: user.headline,
+                location: user.location,
+                profile_picture: user.profile_picture,
+                coverPhoto: user.coverPhoto,
+            },
         });
-
     } catch (error) {
-        console.error(error);
         return res.status(500).json({
             success: false,
             message: 'Server error',
-            error,
+            error: error.message,
         });
     }
 };
-
 
 const deleteProfileController = async (req, res) => {
     try {
         const userId = req.user.id;
 
-
         const profile = await Profile.findOne({ where: { user_id: userId } });
-
         if (!profile) {
             return res.status(404).json({
                 success: false,
                 message: 'Profile not found'
             });
         }
-
 
         await profile.destroy();
 
@@ -156,103 +148,64 @@ const deleteProfileController = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message
         });
-    }
-}
-
-
-const searchSkills = async (req, res) => {
-    const { searchTerm } = req.query;
-
-    try {
-        const skills = await Skill.find({
-            name: { $regex: searchTerm, $options: 'i' },  // Case-insensitive search
-        });
-
-        res.status(200).json({ skills });
-    } catch (error) {
-        res.status(500).json({ message: 'Error searching skills.' });
     }
 };
-
 
 const addEndorsementController = async (req, res) => {
     const { userId, skill } = req.body;
     const endorsingUserId = req.user.id;
 
     try {
-
-        const userToBeEndorsed = await User.findById(userId);
+        const userToBeEndorsed = await User.findByPk(userId);
         if (!userToBeEndorsed) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-
-        if (!userToBeEndorsed.skills.includes(skill)) {
-            userToBeEndorsed.skills.push(skill);
+        if (Endorsement) {
+            await Endorsement.create({
+                endorsed_by: endorsingUserId,
+                endorsed_user: userId,
+                skill,
+            });
         }
 
-        await userToBeEndorsed.save();
+        sendNotification(userId, endorsingUserId, 'endorsement', `Someone endorsed you for ${skill}`);
 
-        // Create the notification
-        const notificationMessage = `${req.user.name} has endorsed you for ${skill}`;
-        const notification = new Notification({
-            userId: userToBeEndorsed._id,
-            type: 'endorsement',
-            message: notificationMessage,
-        });
-        await notification.save();
-
-        res.status(200).json({ message: 'Endorsement added and notification sent' });
+        res.status(200).json({ success: true, message: 'Endorsement added and notification sent' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error adding endorsement and notification' });
+        res.status(500).json({ success: false, message: 'Error adding endorsement', error: error.message });
     }
 };
-
-
 
 const removeEndorsementController = async (req, res) => {
     const { userId, skill } = req.body;
     const endorsingUserId = req.user.id;
 
     try {
-
-        const userToBeEndorsed = await User.findById(userId);
-        if (!userToBeEndorsed) {
-            return res.status(404).json({ message: 'User not found' });
+        if (Endorsement) {
+            await Endorsement.destroy({
+                where: {
+                    endorsed_by: endorsingUserId,
+                    endorsed_user: userId,
+                    skill,
+                },
+            });
         }
 
-
-        userToBeEndorsed.skills = userToBeEndorsed.skills.filter((s) => s !== skill);
-
-        await userToBeEndorsed.save();
-
-
-        const notificationMessage = `${req.user.name} removed the endorsement for ${skill}`;
-        const notification = new Notification({
-            userId: userToBeEndorsed._id,
-            type: 'endorsement',
-            message: notificationMessage,
-        });
-        await notification.save();
-
-        res.status(200).json({ message: 'Endorsement removed and notification sent' });
+        res.status(200).json({ success: true, message: 'Endorsement removed successfully' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error removing endorsement and notification' });
+        res.status(500).json({ success: false, message: 'Error removing endorsement', error: error.message });
     }
 };
-
-
 
 module.exports = {
     createProfileController,
     getProfileController,
     updateProfileController,
     deleteProfileController,
-    searchSkills,
     addEndorsementController,
     removeEndorsementController,
-}
+};

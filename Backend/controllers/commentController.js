@@ -1,7 +1,5 @@
-const { Comment, Post, User } = require('../models/post.js');
-const { createNotification } = require('../utils/notification.js');
-
-
+const { Comment, Post, User } = require('../models');
+const { sendNotification } = require('../utils/notification.js');
 
 const createCommentController = async (req, res) => {
     try {
@@ -9,6 +7,13 @@ const createCommentController = async (req, res) => {
         const userId = req.user.id;
         const postId = req.params.postId;
 
+        const post = await Post.findByPk(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: 'Post not found',
+            });
+        }
 
         const comment = await Comment.create({
             content,
@@ -16,60 +21,54 @@ const createCommentController = async (req, res) => {
             user_id: userId,
         });
 
-
-        const post = await Post.findByPk(postId);
-        post.comments_count += 1;
+        post.comments += 1;
         await post.save();
 
-        createNotification(post.user_id, 'comment', `${req.user.name} commented on your post`);
+        if (post.user_id !== userId) {
+            sendNotification(post.user_id, userId, 'comment', `Someone commented on your post`);
+        }
 
         res.status(201).json({
             success: true,
-            message: 'Comment added successfully', comment
+            message: 'Comment added successfully',
+            comment,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message,
         });
     }
-}
-
+};
 
 const getAllCommentsController = async (req, res) => {
     try {
         const postId = req.params.postId;
 
-
         const comments = await Comment.findAll({
             where: { post_id: postId },
             include: [
-                { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
+                { model: User, as: 'user', attributes: ['id', 'name', 'email', 'profile_picture'] },
             ],
+            order: [['createdAt', 'DESC']],
         });
-
-        if (comments.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No comments found for this post'
-            });
-        }
 
         res.status(200).json({
             success: true,
             message: 'Fetch all comments successfully',
-            comments
+            comments,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message,
         });
     }
-}
-
+};
 
 module.exports = {
     createCommentController,
-    getAllCommentsController
-}
+    getAllCommentsController,
+};

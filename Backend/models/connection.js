@@ -1,18 +1,10 @@
 'use strict';
 
-const { Model, DataTypes } = require('sequelize');
-const {sequelize} = require('../db/config.js')
-
-class Connection extends Model {
-  static associate(models) {
-    // define association here
-  }
-}
-
-Connection.init(
-  {
+module.exports = (sequelize, DataTypes) => {
+  const Connection = sequelize.define('Connection', {
     user_id: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
         model: 'Users',
         key: 'id',
@@ -20,13 +12,26 @@ Connection.init(
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     },
-    connection_id: DataTypes.INTEGER,
-    status: DataTypes.STRING,
-  },
-  {
-    sequelize,
-    modelName: 'Connection',
-  }
-);
+    connection_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
+      defaultValue: 'pending',
+    },
+  });
 
-module.exports = Connection;
+  Connection.associate = (models) => {
+    Connection.belongsTo(models.User, { foreignKey: 'user_id', as: 'requester' });
+    Connection.belongsTo(models.User, { foreignKey: 'connection_id', as: 'receiver' });
+  };
+
+  return Connection;
+};

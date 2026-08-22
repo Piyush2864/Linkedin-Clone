@@ -1,8 +1,4 @@
-const { Job } = require('../models/job.js');
-const { User } = require('../models/user.js');
-const { Application } = require('../models/application.js');
-
-
+const { Job, User, Application } = require('../models');
 
 const createJobController = async (req, res) => {
     try {
@@ -26,16 +22,17 @@ const createJobController = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message
         });
     }
-}
-
+};
 
 const getAllJobsController = async (req, res) => {
     try {
         const jobs = await Job.findAll({
             include: [{ model: User, as: 'recruiter', attributes: ['id', 'name', 'email'] }],
+            order: [['createdAt', 'DESC']],
         });
 
         res.status(200).json({
@@ -46,13 +43,13 @@ const getAllJobsController = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Server error', error
+            message: 'Server error',
+            error: error.message
         });
     }
-}
-
+};
 
 module.exports = {
     createJobController,
     getAllJobsController
-}
+};

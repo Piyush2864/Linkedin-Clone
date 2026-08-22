@@ -1,44 +1,24 @@
 const { Op } = require('sequelize');
-const { Notification } = require('../models/notification.js');
-const { Message } = require('../models/message.js');
-
-const onlineUsers = new Map(); 
-
-// const activeUsers = new Map(); // Map to track online users
+const { Message, User } = require('../models');
+const { sendNotification } = require('../utils/notification.js');
 
 const sendMessageController = async (req, res) => {
     try {
         const { receiver_id, content } = req.body;
         const sender_id = req.user.id;
 
-        
-        const isDelivered = activeUsers.has(receiver_id);
-
-        
         const message = await Message.create({ 
             sender_id, 
             receiver_id, 
             content, 
-            is_delivered: isDelivered,
+            is_delivered: false,
         });
 
-       
-        const notification = await Notification.create({
-            user_id: receiver_id,
-            sender_id: sender_id,
-            type: 'message',
-            message: `New message from User ${sender_id}`,
-        });
+        sendNotification(receiver_id, sender_id, 'message', `New message received`);
 
-        
-        const receiverSocket = activeUsers.get(receiver_id);
-        if (receiverSocket) {
-            io.to(receiverSocket).emit('receive_message', message);
-            io.to(receiverSocket).emit('message_delivered', message.id);
-            io.to(receiverSocket).emit('new_notification', {
-                type: 'message',
-                message: `New message from User ${sender_id}`,
-            });
+        if (global.io) {
+            global.io.emit(`chat_${receiver_id}`, message);
+            global.io.emit(`chat_${sender_id}`, message);
         }
 
         res.status(201).json({
@@ -57,7 +37,6 @@ const sendMessageController = async (req, res) => {
     }
 };
 
-
 const getChatHistoryController = async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -70,6 +49,10 @@ const getChatHistoryController = async (req, res) => {
                     { sender_id: userId, receiver_id: currentUserId },
                 ],
             },
+            include: [
+                { model: User, as: 'sender', attributes: ['id', 'name', 'profile_picture'] },
+                { model: User, as: 'receiver', attributes: ['id', 'name', 'profile_picture'] },
+            ],
             order: [['createdAt', 'ASC']],
         });
 
@@ -89,13 +72,11 @@ const getChatHistoryController = async (req, res) => {
     }
 };
 
-
 const markAsReadController = async (req, res) => {
     try {
         const userId = req.params.userId;
         const currentUserId = req.user.id;
 
-        
         await Message.update(
             { is_read: true },
             {
@@ -107,10 +88,8 @@ const markAsReadController = async (req, res) => {
             }
         );
 
-        
-        const senderSocket = onlineUsers.get(userId);
-        if (senderSocket) {
-            global.io.to(senderSocket).emit('message_seen', { sender_id: currentUserId });
+        if (global.io) {
+            global.io.emit(`message_read_${userId}`, { read_by: currentUserId });
         }
 
         res.status(200).json({
@@ -128,15 +107,13 @@ const markAsReadController = async (req, res) => {
     }
 };
 
-
 const startTypingController = (req, res) => {
     try {
         const { receiver_id } = req.body;
         const sender_id = req.user.id;
 
-        const receiverSocket = onlineUsers.get(receiver_id);
-        if (receiverSocket) {
-            global.io.to(receiverSocket).emit('user_typing', { sender_id });
+        if (global.io) {
+            global.io.emit(`typing_${receiver_id}`, { sender_id });
         }
 
         res.status(200).json({
@@ -159,9 +136,8 @@ const stopTypingController = (req, res) => {
         const { receiver_id } = req.body;
         const sender_id = req.user.id;
 
-        const receiverSocket = onlineUsers.get(receiver_id);
-        if (receiverSocket) {
-            global.io.to(receiverSocket).emit('user_stopped_typing', { sender_id });
+        if (global.io) {
+            global.io.emit(`stop_typing_${receiver_id}`, { sender_id });
         }
 
         res.status(200).json({
