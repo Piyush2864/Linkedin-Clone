@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Message, User } = require('../models');
+const { Message, User } = require('../models/index.js');
 const { sendNotification } = require('../utils/notification.js');
 
 const sendMessageController = async (req, res) => {
@@ -7,10 +7,10 @@ const sendMessageController = async (req, res) => {
         const { receiver_id, content } = req.body;
         const sender_id = req.user.id;
 
-        const message = await Message.create({ 
-            sender_id, 
-            receiver_id, 
-            content, 
+        const message = await Message.create({
+            sender_id,
+            receiver_id,
+            content,
             is_delivered: false,
         });
 
